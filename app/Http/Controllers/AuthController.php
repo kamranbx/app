@@ -57,6 +57,30 @@ class AuthController extends Controller
             ], 401);
     }
 
+    public function logout(Request $request)
+    {
+        $request->validate(['refresh_token' => 'required|string']);
+        $token = $request->refresh_token;
+
+        if (!$token)
+            return response()->json(['message' => 'No token provided'], 400);
+
+        try
+        {
+            $signature = Jwt::getSignature($token);
+            $decoded = Jwt::decode($token, true);
+
+            $ttl = $decoded->exp - time();
+            Cache::put('blacklisted_refresh:' . $signature, true, now()->addSeconds($ttl));
+
+            return response()->json(['message' => 'Successfully logged out']);
+        }
+        catch (\Exception $e)
+        {
+            return response()->json(['message' => 'Invalid token'], 401);
+        }
+    }
+
     public function user()
     {
         return response()->json([
@@ -75,19 +99,16 @@ class AuthController extends Controller
         {
             $decoded = Jwt::decode($refreshToken, true);
 
-            if($decoded->type !== 'refresh') {
+            if($decoded->type !== 'refresh')
                 return response()->json(['error' => 'Invalid token type'], 401);
-            }
 
             $signature = Jwt::getSignature($refreshToken);
-            if(Cache::has("blacklisted_refresh:$signature")) {
+            if(Cache::has("blacklisted_refresh:$signature"))
                 return response()->json(['error' => 'Token already used'], 401);
-            }
 
             $user = \App\Models\User::find($decoded->sub);
-            if(!$user) {
+            if(!$user)
                 return response()->json(['error' => 'User not found'], 404);
-            }
 
             $ttl = $decoded->exp - time();
             Cache::put("blacklisted_refresh:$signature", true, $ttl);
