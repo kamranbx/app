@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('register', [\App\Http\Controllers\AuthController::class, 'register']);
 Route::post('login', [\App\Http\Controllers\AuthController::class, 'login']);
+Route::post('logout', [\App\Http\Controllers\AuthController::class, 'logout']);
 Route::post('refresh-token', [\App\Http\Controllers\AuthController::class, 'refreshToken']);
 
 Route::middleware('jwt')->group(function () {
