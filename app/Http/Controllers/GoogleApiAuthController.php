@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Laravel\Socialite\Facades\Socialite;
 
 class GoogleApiAuthController extends Controller
 {
@@ -15,19 +16,15 @@ class GoogleApiAuthController extends Controller
             'token' => 'required|string',
         ]);
 
-        $client = new \Google_Client(['client_id' => env('GOOGLE_CLIENT_ID')]);
-        $payload = $client->verifyIdToken($request->token);
-
-        if (!$payload) {
+        try {
+            $googleUser = Socialite::driver('google')->stateless()->userFromToken($request->token);
+        } catch (\Exception $e) {
             return response()->json(['error' => 'Invalid token'], 401);
         }
 
-        $email = $payload['email'];
-        $name = $payload['name'] ?? 'No Name';
-
         $user = User::firstOrCreate(
-            ['email' => $email],
-            ['name' => $name, 'password' => Hash::make(Str::random(32))]
+            ['email' => $googleUser->getEmail()],
+            ['name' => $googleUser->getName(), 'password' => Hash::make(Str::random(32))]
         );
 
         $tokens = auth()->login($user);
