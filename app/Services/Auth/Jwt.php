@@ -2,6 +2,7 @@
 
 namespace App\Services\Auth;
 
+use App\Enums\UserRole;
 use Firebase\JWT\Key;
 
 class Jwt
@@ -16,8 +17,11 @@ class Jwt
             'iat' => time(),
             'exp' => time() + $ttl,
             'user' => [
-                'name' => $user->name,
+                'name'  => $user->name,
                 'email' => $user->email,
+                'role'  => $user->role instanceof UserRole
+                    ? $user->role->value
+                    : UserRole::from($user->role)->value,
             ]
         ];
 

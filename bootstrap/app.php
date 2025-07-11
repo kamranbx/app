@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Middleware\JwtAuthenticate;
+use App\Http\Middleware\RoleAuthorize;
+use App\Http\Middleware\RolePermissionAuthorize;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -14,7 +16,9 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
-            'jwt' => JwtAuthenticate::class,
+            'jwt'  => JwtAuthenticate::class,
+            'role' => RoleAuthorize::class,
+            'role-perm' => RolePermissionAuthorize::class
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
